@@ -1,11 +1,9 @@
-# Pitch Black collector
+# Pokémon Card Collection
 
-A standalone static checklist for the 120 numbered English Pokémon TCG Mega Evolution—Pitch Black cards and their 199 available normal, holo and reverse holo finishes.
+A standalone static checklist for the 122 numbered English Pokémon TCG Mega Evolution—Chaos Rising cards and 120 Mega Evolution—Pitch Black cards. It tracks 406 finishes, including the four stamped Chaos Rising variants currently listed by TCGdex. Filter by series, rarity, name, and collection status.
 
-Open the published page and tap each finish you own. Collection state is stored only in that browser's local storage. Use **Export checklist** to download a backup and **Import checklist** to restore it in another browser. There is no account or cloud sync.
+The collected state lives only in this browser's local storage. The existing Pitch Black storage key is retained so previously marked cards stay collected. **Export checklist** creates a backup covering both series; **Import checklist** accepts both the new format and old Pitch Black exports. Importing an old Pitch Black export replaces only the Pitch Black checkmarks. There is no account or cloud sync.
 
-The checked-in `cards.json` snapshot was generated from [TCGdex](https://tcgdex.dev/) on 7 October 2026 (Australia/Melbourne). It includes TCGplayer ungraded market prices in USD. The page refreshes prices from TCGdex after the saved snapshot is over six hours old, and the **Refresh prices** button can request them sooner. If the price service is unavailable, the page keeps the saved values and shows their last update time. Five normal finishes had no published market price in the initial snapshot, so they display a dash. Card images load from TCGdex and need an internet connection.
+The checked-in `cards.json` snapshot was generated from [TCGdex](https://tcgdex.dev/) on 25 October 2026 (Australia/Melbourne). It contains indicative Cardmarket average prices in EUR, updated 24 October 2026, and a [Frankfurter](https://frankfurter.dev/) EUR/AUD exchange rate dated 25 October 2026. Cardmarket often reports one product price for several finishes; normal, holo, and reverse estimates can therefore overlap. These are approximate values, not Australian market sale prices. The page shows the price and exchange-rate dates. Live prices refresh after the snapshot is more than 24 hours old or when **Refresh prices** is pressed. If live sources fail, saved estimates remain visible. Card images load from TCGdex and require an internet connection.
 
-AUD amounts are approximate conversions of USD market prices using the latest available [Frankfurter](https://frankfurter.dev/) USD/AUD rate. They are not Australian market sale prices. The page displays the source price update time and exchange-rate date.
-
-To update the fallback snapshot locally, run `python3 update-data.py`. The site itself needs no build tools: serve this directory as static files or deploy it through GitHub or Vercel.
+To update the fallback snapshot locally, run `python3 update-data.py`. The site needs no build tools: serve this directory as static files or deploy it through GitHub or Vercel.

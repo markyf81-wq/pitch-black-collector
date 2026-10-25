@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0b0b14">
-  <meta name="description" content="A personal checklist for all 120 Pokémon TCG Pitch Black cards and their finishes, with market price estimates.">
-  <title>Pitch Black · Collector's checklist</title>
+  <meta name="description" content="Track every card and finish in Pokémon TCG Chaos Rising and Pitch Black, with current market value estimates.">
+  <title>Pokémon Card Collection · Collector's checklist</title>
   <link rel="preconnect" href="https://assets.tcgdex.net">
   <link rel="stylesheet" href="styles.css">
   <script src="app.js" defer></script>
@@ -15,39 +15,39 @@
   <div class="ambient ambient-two" aria-hidden="true"></div>
   <div class="page-shell">
     <header class="site-header">
-      <a class="brand" href="#top" aria-label="Pitch Black checklist, back to top"><span class="brand-mark">✦</span><span>PITCH<span class="brand-light">BLACK</span></span></a>
-      <span class="edition">ME05 <span class="edition-dot">•</span> 2026 SET TRACKER</span>
+      <a class="brand" href="#top" aria-label="Pokémon Card Collection, back to top"><span class="brand-mark">✦</span><span>POKÉMON <span class="brand-light">CARD COLLECTION</span></span></a>
+      <span class="edition">ME04 + ME05 <span class="edition-dot">•</span> SET TRACKER</span>
     </header>
 
     <main id="top">
       <section class="hero" aria-labelledby="hero-title">
         <div class="hero-copy">
           <p class="eyebrow"><span class="eyebrow-line"></span> THE COMPLETE COLLECTOR'S CHECKLIST</p>
-          <h1 id="hero-title">Into the <em>dark.</em><br>One card at a time.</h1>
-          <p class="hero-description">Every numbered card in <strong>Mega Evolution—Pitch Black</strong>, with each available finish tracked separately. Tap what you own and watch the set come together.</p>
+          <h1 id="hero-title">Every card.<br>Every <em>finish.</em></h1>
+          <p class="hero-description">Collect <strong>Mega Evolution—Chaos Rising</strong> and <strong>Mega Evolution—Pitch Black</strong> in one place. Mark each finish you own, explore current value estimates, and follow your progress by set.</p>
           <div class="hero-actions">
             <a class="primary-link" href="#collection">Explore the cards <span aria-hidden="true">↘</span></a>
-            <span class="hero-set-count">120 cards <span>·</span> <span id="hero-variant-count">199 finishes</span></span>
+            <span class="hero-set-count"><span id="hero-card-count">242 cards</span> <span>·</span> <span id="hero-variant-count">Finishes loading…</span></span>
           </div>
         </div>
         <div class="hero-art" aria-hidden="true">
           <div class="halo halo-back"></div>
           <div class="halo halo-front"></div>
-          <div class="hero-card hero-card-back"></div>
-          <div class="hero-card hero-card-front"><img src="https://assets.tcgdex.net/en/me/me05/120/high.webp" alt="" fetchpriority="high"></div>
-          <span class="hero-art-caption">120 / 120 <span>◆</span> MEGA DARKRAI EX</span>
+          <div class="hero-card hero-card-back"><img src="https://assets.tcgdex.net/en/me/me05/120/high.webp" alt=""></div>
+          <div class="hero-card hero-card-front"><img src="https://assets.tcgdex.net/en/me/me04/122/high.webp" alt="" fetchpriority="high"></div>
+          <span class="hero-art-caption">CHAOS RISING <span>◆</span> PITCH BLACK</span>
         </div>
       </section>
 
       <section class="dashboard" aria-label="Collection progress">
         <div class="progress-panel">
-          <div class="panel-top"><span class="panel-kicker">YOUR COLLECTION</span><span id="progress-percent" class="progress-percent">0%</span></div>
-          <div class="progress-numbers"><strong id="owned-count">0</strong><span id="progress-total">/ 199 finishes collected</span></div>
-          <div class="progress-track" role="progressbar" aria-label="Collection completion" aria-valuemin="0" aria-valuemax="199" aria-valuenow="0"><span id="progress-fill"></span></div>
+          <div class="panel-top"><span class="panel-kicker">YOUR COLLECTION · <span id="progress-scope">ALL SETS</span></span><span id="progress-percent" class="progress-percent">0%</span></div>
+          <div class="progress-numbers"><strong id="owned-count">0</strong><span id="progress-total">finishes collected</span></div>
+          <div class="progress-track" role="progressbar" aria-label="Collection completion" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0"><span id="progress-fill"></span></div>
           <p id="progress-message">Your journey starts here.</p>
         </div>
         <div class="metric-panel"><span class="panel-kicker">EST. COLLECTION VALUE</span><strong id="collection-value">A$0.00</strong><p>Based on the finishes you own</p></div>
-        <div class="metric-panel"><span class="panel-kicker">STILL TO FIND</span><strong id="remaining-count">199</strong><p>Finishes left in the set</p></div>
+        <div class="metric-panel"><span class="panel-kicker">STILL TO FIND</span><strong id="remaining-count">—</strong><p>Finishes left in this selection</p></div>
       </section>
 
       <section class="collection-section" id="collection" aria-labelledby="collection-title">
@@ -59,9 +59,10 @@
         <div class="toolbar">
           <label class="search-box"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg><span class="sr-only">Search cards</span><input id="search" type="search" placeholder="Search name or number…" autocomplete="off"></label>
           <div class="filter-tabs" role="group" aria-label="Collection filter"><button class="filter-tab active" data-filter="all" type="button">All</button><button class="filter-tab" data-filter="missing" type="button">Missing</button><button class="filter-tab" data-filter="owned" type="button">Collected</button></div>
+          <label class="select-wrap series-wrap"><span class="sr-only">Card series</span><select id="series"><option value="all">All series</option><option value="me04">Chaos Rising</option><option value="me05">Pitch Black</option></select></label>
           <label class="select-wrap"><span class="sr-only">Rarity</span><select id="rarity"><option value="all">All rarities</option></select></label>
           <label class="select-wrap"><span class="sr-only">Sort cards</span><select id="sort"><option value="number">Card number</option><option value="price-desc">Value: high to low</option><option value="price-asc">Value: low to high</option><option value="name">Name: A to Z</option></select></label>
-          <label class="select-wrap currency-wrap"><span class="sr-only">Display currency</span><select id="currency"><option value="AUD">AUD approx.</option><option value="USD">USD</option></select></label>
+          <label class="select-wrap currency-wrap"><span class="sr-only">Display currency</span><select id="currency"><option value="AUD">AUD approx.</option><option value="EUR">EUR source</option></select></label>
         </div>
 
         <div class="collection-meta"><span id="result-count">Loading cards…</span><div class="collection-tools"><button type="button" class="text-button" id="refresh-prices" title="Get the newest available market prices">↻ Refresh prices</button><button type="button" class="text-button" id="export-collection">↓ Export checklist</button><label class="text-button import-button" for="import-collection">↑ Import checklist<input id="import-collection" type="file" accept="application/json,.json" hidden></label></div></div>
@@ -72,8 +73,8 @@
     </main>
 
     <footer class="site-footer">
-      <div><span class="footer-mark">✦</span><strong>PITCH BLACK</strong><p>A little space for a big collection.</p></div>
-      <div class="footer-fine"><p id="price-status">Loading price information…</p><p>Prices are estimated ungraded TCGplayer market values in USD. AUD is an approximate currency conversion, not an Australian sale price. Prices and availability can change.</p><p>Card data and images: <a href="https://tcgdex.dev/" target="_blank" rel="noopener noreferrer">TCGdex</a>. Exchange rates: <a href="https://frankfurter.dev/" target="_blank" rel="noopener noreferrer">Frankfurter</a>. Your checklist stays in this browser; use Export to keep a backup.</p><p>This is an independent fan checklist and is not affiliated with Pokémon or TCGplayer.</p></div>
+      <div><span class="footer-mark">✦</span><strong>POKÉMON CARD COLLECTION</strong><p>A little space for a big collection.</p></div>
+      <div class="footer-fine"><p id="price-status">Loading price information…</p><p>Values are indicative Cardmarket averages in EUR. Some normal, holo and reverse finishes share a product price, so their estimates may match. AUD uses an approximate exchange rate, not an Australian sale price. Prices and availability can change.</p><p>Card data and images: <a href="https://tcgdex.dev/" target="_blank" rel="noopener noreferrer">TCGdex</a>. Exchange rates: <a href="https://frankfurter.dev/" target="_blank" rel="noopener noreferrer">Frankfurter</a>. Your checklist stays in this browser; use Export to keep a backup.</p><p>This is an independent fan checklist and is not affiliated with Pokémon or Cardmarket.</p></div>
     </footer>
   </div>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
