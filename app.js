@@ -1,12 +1,16 @@
 const API = 'https://api.tcgdex.net/v2/en/cards/';
 const SETS = { me04: 'Chaos Rising', me05: 'Pitch Black' };
 const OWNED_KEY = 'pitch-black-me05-owned-v1';
+const ACTIVE_VAULT_KEY = 'pokemon-collection-active-vault-v1';
+const RECORDS_PREFIX = 'pokemon-collection-records-v1:';
+const DEVICE_KEY = 'pokemon-collection-device-v1';
+const CLOUD_API = location.hostname.endsWith('.vercel.app') ? '/api/collection' : 'https://pokemon-card-collection-eight.vercel.app/api/collection';
 const PRICE_KEY = 'pokemon-collection-cardmarket-prices-v1';
 const CURRENCY_KEY = 'pokemon-collection-currency-v1';
 const FINISH_NAMES = { normal: 'Normal', holofoil: 'Holo', 'reverse-holofoil': 'Reverse holo', 'holofoil-gamestop': 'GameStop stamped holo', 'holofoil-eb-games': 'EB Games stamped holo', 'holofoil-set-logo': 'Set logo stamped holo' };
 
 const $ = (selector) => document.querySelector(selector);
-const state = { cards: [], owned: new Set(), filter: 'all', series: 'all', search: '', rarity: 'all', sort: 'number', currency: 'AUD', fx: null, fetchedAt: null, priceUpdated: null, refreshing: false };
+const state = { cards: [], owned: new Set(), records: {}, vaultId: null, password: null, deviceId: null, syncTimer: null, syncing: false, localRevision: 0, filter: 'all', series: 'all', search: '', rarity: 'all', sort: 'number', currency: 'AUD', fx: null, fetchedAt: null, priceUpdated: null, refreshing: false };
 let toastTimer;
 
 function readJSON(key) {
@@ -49,6 +53,91 @@ function toast(message) {
   element.classList.add('visible');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => element.classList.remove('visible'), 3500);
+}
+
+function mergeRecords(first, second) {
+  const result = { ...first };
+  for (const [key, record] of Object.entries(second)) {
+    const previous = result[key];
+    if (!previous || record.at > previous.at || (record.at === previous.at && record.device > previous.device)) result[key] = record;
+  }
+  return result;
+}
+function useRecords(records) {
+  state.records = records;
+  state.owned = new Set(Object.entries(records).filter(([, record]) => record.owned).map(([key]) => key));
+  if (state.vaultId) saveJSON(RECORDS_PREFIX + state.vaultId, records);
+  render();
+}
+function saveOwnedChange(key, owned) {
+  state.localRevision++;
+  if (state.vaultId) {
+    const previous = state.records[key]?.at || 0;
+    state.records[key] = { owned, at: Math.max(Date.now(), previous + 1), device: state.deviceId };
+    saveJSON(RECORDS_PREFIX + state.vaultId, state.records);
+    scheduleSync();
+  } else if (!saveJSON(OWNED_KEY, [...state.owned])) {
+    toast('Browser storage is unavailable. Export your checklist before leaving.');
+  }
+}
+function cloudStatus(message) { $('#cloud-status').textContent = message; }
+async function cloudRequest(action, records = undefined) {
+  const password = state.password;
+  const response = await fetch(CLOUD_API, { method: 'POST', mode: 'cors', cache: 'no-store', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, password, ...(records ? { records } : {}) }) });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Cloud unavailable');
+  return data;
+}
+function scheduleSync(delay = 600) {
+  if (!state.password || !state.vaultId) return;
+  clearTimeout(state.syncTimer);
+  state.syncTimer = setTimeout(syncCollection, delay);
+  cloudStatus(navigator.onLine ? 'Saving to cloud…' : 'Saved on this device. Waiting for internet…');
+}
+async function syncCollection() {
+  if (!state.password || !state.vaultId || state.syncing) return;
+  state.syncing = true;
+  const revision = state.localRevision;
+  try {
+    const data = await cloudRequest('sync', state.records);
+    if (data.id !== state.vaultId) throw new Error('Collection mismatch');
+    useRecords(mergeRecords(data.records, state.records));
+    cloudStatus('Saved on this device and Vercel.');
+    if (state.localRevision !== revision) scheduleSync(0);
+  } catch {
+    cloudStatus('Saved on this device. Cloud sync will retry when you reconnect or return.');
+    if (navigator.onLine && state.password) scheduleSync(15_000);
+  } finally { state.syncing = false; }
+}
+async function loadCollection() {
+  if (!state.password) return;
+  const password = state.password;
+  cloudStatus('Loading collection…');
+  try {
+    const data = await cloudRequest('load');
+    if (password !== state.password) return;
+    const previousVault = state.vaultId;
+    let local = readJSON(RECORDS_PREFIX + data.id) || {};
+    if (!previousVault) {
+      const legacy = readJSON(OWNED_KEY);
+      if (Array.isArray(legacy)) {
+        const valid = new Set(state.cards.flatMap((card) => card.variants.map((finish) => variantKey(card, finish))));
+        local = mergeRecords(local, Object.fromEntries(legacy.filter((key) => valid.has(key)).map((key) => [key, { owned: true, at: 0, device: state.deviceId }])));
+      }
+    }
+    state.vaultId = data.id;
+    saveJSON(ACTIVE_VAULT_KEY, data.id);
+    useRecords(mergeRecords(data.records, local));
+    $('#cloud-password').value = '';
+    $('#cloud-password').required = false;
+    $('#cloud-password').placeholder = 'Collection connected';
+    $('#cloud-connect').textContent = 'Refresh collection';
+    $('#cloud-switch').hidden = false;
+    cloudStatus(data.exists ? 'Collection loaded. Changes sync automatically.' : 'Creating your cloud collection…');
+    if (!data.exists || Object.keys(local).length) scheduleSync(0);
+  } catch (error) {
+    cloudStatus(`${error.message}. Your device copy is unchanged.`);
+  }
 }
 
 function renderProgress() {
@@ -203,8 +292,8 @@ function bindEvents() {
     if (!button) return;
     const key = button.dataset.key;
     if (state.owned.has(key)) state.owned.delete(key); else state.owned.add(key);
-    if (!saveJSON(OWNED_KEY, [...state.owned])) toast('Browser storage is unavailable. Export your checklist before leaving.');
     const owned = state.owned.has(key);
+    saveOwnedChange(key, owned);
     button.classList.toggle('owned', owned);
     button.setAttribute('aria-pressed', String(owned));
     button.querySelector('.finish-check').textContent = owned ? '✓' : '';
@@ -223,6 +312,26 @@ function bindEvents() {
   $('#sort').addEventListener('change', (event) => { state.sort = event.target.value; renderCards(); });
   $('#currency').addEventListener('change', (event) => { state.currency = event.target.value; saveJSON(CURRENCY_KEY, state.currency); render(); });
   $('#refresh-prices').addEventListener('click', () => refreshPrices(true));
+  $('#cloud-form').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const value = $('#cloud-password').value;
+    if (value) state.password = value;
+    if (!state.password) return;
+    $('#cloud-connect').disabled = true;
+    await loadCollection();
+    $('#cloud-connect').disabled = false;
+  });
+  $('#cloud-switch').addEventListener('click', () => {
+    state.password = null;
+    $('#cloud-password').value = '';
+    $('#cloud-password').required = true;
+    $('#cloud-password').placeholder = 'Enter another passphrase';
+    $('#cloud-connect').textContent = 'Load collection';
+    $('#cloud-switch').hidden = true;
+    cloudStatus('Current collection stays saved on this device. Enter another password to switch.');
+  });
+  window.addEventListener('online', () => { if (state.password) loadCollection(); });
+  window.addEventListener('focus', () => { if (state.password) loadCollection(); });
   $('#clear-filters').addEventListener('click', () => {
     state.filter = 'all'; state.series = 'all'; state.search = ''; state.rarity = 'all';
     $('#search').value = ''; $('#series').value = 'all'; $('#rarity').value = 'all';
@@ -247,8 +356,13 @@ function bindEvents() {
       if ((!legacy && !current) || !Array.isArray(data.owned)) throw new Error('Wrong checklist format');
       const valid = new Set(state.cards.flatMap((card) => card.variants.map((finish) => variantKey(card, finish))));
       const imported = data.owned.filter((key) => typeof key === 'string' && valid.has(key));
-      state.owned = legacy ? new Set([...state.owned].filter((key) => !key.startsWith('me05-')).concat(imported)) : new Set(imported);
-      saveJSON(OWNED_KEY, [...state.owned]);
+      const next = legacy ? new Set([...state.owned].filter((key) => !key.startsWith('me05-')).concat(imported)) : new Set(imported);
+      for (const key of new Set([...state.owned, ...next])) {
+        if (state.owned.has(key) === next.has(key)) continue;
+        saveOwnedChange(key, next.has(key));
+      }
+      state.owned = next;
+      if (!state.vaultId) saveJSON(OWNED_KEY, [...next]);
       render();
       toast(`Imported ${state.owned.size} collected finishes`);
     } catch { toast('Could not read this checklist'); }
@@ -267,8 +381,19 @@ async function start() {
     state.fx = snapshot.fx;
     state.fetchedAt = snapshot.fetchedAt;
     state.priceUpdated = state.cards.map((card) => card.priceUpdated).filter(Boolean).sort().at(-1) || null;
-    const saved = readJSON(OWNED_KEY);
-    if (Array.isArray(saved)) state.owned = new Set(saved.filter((key) => typeof key === 'string'));
+    try {
+      state.deviceId = localStorage.getItem(DEVICE_KEY) || crypto.randomUUID();
+      localStorage.setItem(DEVICE_KEY, state.deviceId);
+      state.vaultId = readJSON(ACTIVE_VAULT_KEY);
+    } catch { state.deviceId = crypto.randomUUID(); }
+    if (state.vaultId) {
+      const records = readJSON(RECORDS_PREFIX + state.vaultId);
+      if (records && typeof records === 'object') { state.records = records; state.owned = new Set(Object.entries(records).filter(([, record]) => record?.owned).map(([key]) => key)); }
+      cloudStatus('Saved on this device. Enter your password to resume cloud sync.');
+    } else {
+      const saved = readJSON(OWNED_KEY);
+      if (Array.isArray(saved)) state.owned = new Set(saved.filter((key) => typeof key === 'string'));
+    }
     if (readJSON(CURRENCY_KEY) === 'EUR') state.currency = 'EUR';
     $('#currency').value = state.currency;
     const rarities = [...new Set(state.cards.map((card) => card.rarity))].sort();

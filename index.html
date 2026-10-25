@@ -50,6 +50,11 @@
         <div class="metric-panel"><span class="panel-kicker">STILL TO FIND</span><strong id="remaining-count">—</strong><p>Finishes left in this selection</p></div>
       </section>
 
+      <section class="cloud-panel" aria-labelledby="cloud-title">
+        <div><p class="eyebrow">SAVE ACROSS DEVICES</p><h2 id="cloud-title">Your collection, wherever you collect.</h2><p>Enter your collection password to load it on this device. Each password opens a separate collection. Changes save here immediately and sync to Vercel automatically when online.</p><p class="cloud-advice">Use a long, unique passphrase. Keep it safe: there is no password recovery.</p></div>
+        <form id="cloud-form" class="cloud-form"><label for="cloud-password">Collection password</label><div class="cloud-input-row"><input id="cloud-password" type="password" minlength="12" maxlength="128" autocomplete="off" required placeholder="Enter a passphrase (12+ characters)"><button type="submit" id="cloud-connect">Load collection</button></div><p id="cloud-status" role="status" aria-live="polite">Saved on this device. Enter a password to sync.</p><button type="button" id="cloud-switch" class="text-button" hidden>Switch collection</button></form>
+      </section>
+
       <section class="collection-section" id="collection" aria-labelledby="collection-title">
         <div class="section-heading">
           <div><p class="eyebrow"><span class="eyebrow-line"></span> THE CARD INDEX</p><h2 id="collection-title">The collection</h2></div>
@@ -74,7 +79,7 @@
 
     <footer class="site-footer">
       <div><span class="footer-mark">✦</span><strong>POKÉMON CARD COLLECTION</strong><p>A little space for a big collection.</p></div>
-      <div class="footer-fine"><p id="price-status">Loading price information…</p><p>Values are indicative Cardmarket averages in EUR. Some normal, holo and reverse finishes share a product price, so their estimates may match. AUD uses an approximate exchange rate, not an Australian sale price. Prices and availability can change.</p><p>Card data and images: <a href="https://tcgdex.dev/" target="_blank" rel="noopener noreferrer">TCGdex</a>. Exchange rates: <a href="https://frankfurter.dev/" target="_blank" rel="noopener noreferrer">Frankfurter</a>. Your checklist stays in this browser; use Export to keep a backup.</p><p>This is an independent fan checklist and is not affiliated with Pokémon or Cardmarket.</p></div>
+      <div class="footer-fine"><p id="price-status">Loading price information…</p><p>Values are indicative Cardmarket averages in EUR. Some normal, holo and reverse finishes share a product price, so their estimates may match. AUD uses an approximate exchange rate, not an Australian sale price. Prices and availability can change.</p><p>Card data and images: <a href="https://tcgdex.dev/" target="_blank" rel="noopener noreferrer">TCGdex</a>. Exchange rates: <a href="https://frankfurter.dev/" target="_blank" rel="noopener noreferrer">Frankfurter</a>. Your checklist saves on this device and syncs to a private Vercel store after you enter your collection password. Use Export for a backup.</p><p>This is an independent fan checklist and is not affiliated with Pokémon or Cardmarket.</p></div>
     </footer>
   </div>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
