@@ -7,4 +7,29 @@
 .hero-card-back{overflow:hidden}.hero-card-back img{display:block;width:100%;height:100%;object-fit:contain}.card-set{color:#a8d566;font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;margin-bottom:5px}.series-wrap select{min-width:145px}@media(max-width:620px){.series-wrap select{min-width:0}}
 @media(max-width:620px){.edition{display:none}.brand{font-size:14px}}
 .card-meta{display:flex;align-items:center;justify-content:space-between;gap:5px;flex-wrap:wrap;margin-bottom:7px}.card-meta .card-set{margin-bottom:0}.card-number{display:inline-block;background:#11111de8;color:#eeeef6;border:1px solid #ffffff3a;border-radius:5px;padding:4px 6px;font-size:10px;font-weight:700;letter-spacing:.05em;white-space:nowrap}
-.cloud-panel{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr);gap:2rem;align-items:center;margin:0 0 5rem;padding:2rem 2.25rem;border:1px solid rgba(255,255,255,.12);border-radius:20px;background:linear-gradient(120deg,rgba(91,72,161,.18),rgba(255,255,255,.035))}.cloud-panel h2{margin:.35rem 0 .7rem;font-size:clamp(1.45rem,2.2vw,2rem)}.cloud-panel p{max-width:62ch;margin:.5rem 0;color:#c4c1d3;line-height:1.5}.cloud-panel .cloud-advice{font-size:.83rem;color:#a9a4bb}.cloud-form{display:flex;flex-direction:column;gap:.55rem}.cloud-form label{font-size:.82rem;font-weight:700;color:#eee}.cloud-input-row{display:flex;gap:.5rem}.cloud-input-row input{min-width:0;flex:1;padding:.85rem 1rem;border:1px solid rgba(255,255,255,.22);border-radius:9px;background:#151321;color:white;font:inherit}.cloud-input-row button{padding:.75rem 1rem;border:0;border-radius:9px;background:#bbff56;color:#171c0f;font:inherit;font-weight:800;cursor:pointer}.cloud-input-row button:disabled{opacity:.55;cursor:wait}.cloud-form #cloud-status{margin:.2rem 0;font-size:.83rem}.cloud-form #cloud-switch{align-self:flex-start;padding-left:0}@media(max-width:760px){.cloud-panel{grid-template-columns:1fr;padding:1.5rem;gap:1rem}.cloud-input-row{flex-wrap:wrap}.cloud-input-row button{width:100%}}
+.cloud-panel{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2rem;align-items:center;margin:0 0 5rem;padding:2rem 2.25rem;border:1px solid rgba(255,255,255,.12);border-radius:20px;background:linear-gradient(120deg,rgba(91,72,161,.18),rgba(255,255,255,.035))}
+.cloud-panel h2{margin:.35rem 0 .7rem;font-size:clamp(1.45rem,2.2vw,2rem)}
+.cloud-panel p{max-width:62ch;margin:.5rem 0;color:#c4c1d3;line-height:1.5}
+.cloud-actions{display:flex;flex-direction:column;align-items:stretch;gap:.7rem;min-width:210px}
+.cloud-actions #cloud-status{margin:0;text-align:center;font-size:.83rem;color:#d6d2e4}
+.cloud-sync-button,.cloud-form #cloud-connect{min-height:50px;padding:.8rem 1.15rem;border:0;border-radius:9px;background:var(--lime);color:#171c0f;font:inherit;font-weight:800;cursor:pointer;transition:background .2s,transform .2s}
+.cloud-sync-button{display:flex;align-items:center;justify-content:center;gap:1rem}
+.cloud-sync-button:hover,.cloud-form #cloud-connect:hover{background:#e0ff91;transform:translateY(-2px)}
+.cloud-sync-button:disabled,.cloud-form #cloud-connect:disabled{opacity:.55;cursor:wait;transform:none}
+.cloud-actions #cloud-switch{align-self:center}
+.cloud-dialog{width:min(440px,calc(100% - 32px));max-height:calc(100% - 32px);padding:0;border:1px solid #5a516d;border-radius:18px;background:#1a1928;color:var(--text);box-shadow:0 24px 90px #000b}
+.cloud-dialog::backdrop{background:#070711ba;backdrop-filter:blur(5px)}
+.cloud-form{position:relative;display:flex;flex-direction:column;gap:.7rem;padding:2rem}
+.cloud-form .eyebrow{margin:0 0 .35rem;font-size:10px}
+.cloud-form h2{margin:0;font-size:1.7rem;letter-spacing:-.04em}
+.cloud-form>p:not(.eyebrow){margin:0 0 .35rem;color:#c4c1d3;font-size:.88rem;line-height:1.5}
+.cloud-form label{margin-top:.5rem;font-size:.82rem;font-weight:700;color:#eee}
+.cloud-form input{display:block;width:100%;min-width:0;min-height:50px;padding:.85rem 1rem;border:1px solid #625c70;border-radius:9px;background:#11111d;color:white;font:inherit;font-size:16px;outline:0;-webkit-appearance:none;appearance:none}
+.cloud-form input:focus{border-color:var(--lime);box-shadow:0 0 0 3px #d4ff6529}
+.cloud-form input::placeholder{color:#858496}
+.cloud-form .cloud-advice{font-size:.78rem;color:#a9a4bb}
+.cloud-form #cloud-dialog-status{min-height:1.2em;margin:0;color:var(--lime);font-size:.8rem}
+.cloud-form #cloud-connect{width:100%;-webkit-appearance:none;appearance:none}
+.cloud-close{position:absolute;top:1rem;right:1rem;width:32px;height:32px;border:0;border-radius:7px;background:#302e3e;color:#e8e5ee;font-size:22px;line-height:1}
+.cloud-close:hover{background:#454156}
+@media(max-width:760px){.cloud-panel{grid-template-columns:1fr;padding:1.5rem;gap:1rem}.cloud-actions{width:100%}.cloud-form{padding:1.5rem}}

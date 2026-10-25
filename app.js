@@ -4,13 +4,14 @@ const OWNED_KEY = 'pitch-black-me05-owned-v1';
 const ACTIVE_VAULT_KEY = 'pokemon-collection-active-vault-v1';
 const RECORDS_PREFIX = 'pokemon-collection-records-v1:';
 const DEVICE_KEY = 'pokemon-collection-device-v1';
+const PASSWORD_KEY = 'pokemon-collection-password-v1';
 const CLOUD_API = location.hostname.endsWith('.vercel.app') ? '/api/collection' : 'https://pokemon-card-collection-eight.vercel.app/api/collection';
 const PRICE_KEY = 'pokemon-collection-cardmarket-prices-v1';
 const CURRENCY_KEY = 'pokemon-collection-currency-v1';
 const FINISH_NAMES = { normal: 'Normal', holofoil: 'Holo', 'reverse-holofoil': 'Reverse holo', 'holofoil-gamestop': 'GameStop stamped holo', 'holofoil-eb-games': 'EB Games stamped holo', 'holofoil-set-logo': 'Set logo stamped holo' };
 
 const $ = (selector) => document.querySelector(selector);
-const state = { cards: [], owned: new Set(), records: {}, vaultId: null, password: null, deviceId: null, syncTimer: null, syncing: false, localRevision: 0, filter: 'all', series: 'all', search: '', rarity: 'all', sort: 'number', currency: 'AUD', fx: null, fetchedAt: null, priceUpdated: null, refreshing: false };
+const state = { cards: [], owned: new Set(), records: {}, vaultId: null, password: null, passwordSaved: false, deviceId: null, syncTimer: null, syncPromise: null, loadPromise: null, connecting: false, localRevision: 0, filter: 'all', series: 'all', search: '', rarity: 'all', sort: 'number', currency: 'AUD', fx: null, fetchedAt: null, priceUpdated: null, refreshing: false };
 let toastTimer;
 
 function readJSON(key) {
@@ -63,6 +64,13 @@ function mergeRecords(first, second) {
   }
   return result;
 }
+function recordsEqual(first, second) {
+  const keys = Object.keys(first);
+  return keys.length === Object.keys(second).length && keys.every((key) => {
+    const a = first[key], b = second[key];
+    return b && a.owned === b.owned && a.at === b.at && a.device === b.device;
+  });
+}
 function useRecords(records) {
   state.records = records;
   state.owned = new Set(Object.entries(records).filter(([, record]) => record.owned).map(([key]) => key));
@@ -81,8 +89,13 @@ function saveOwnedChange(key, owned) {
   }
 }
 function cloudStatus(message) { $('#cloud-status').textContent = message; }
-async function cloudRequest(action, records = undefined) {
-  const password = state.password;
+function connectedStatus() { return state.passwordSaved ? 'Up to date · auto sync is on' : 'Up to date · enter password after reload'; }
+function updateCloudControls() {
+  const connected = Boolean(state.password && state.vaultId);
+  $('#cloud-sync-label').textContent = connected ? 'Sync now' : 'Sync';
+  $('#cloud-switch').hidden = !connected;
+}
+async function cloudRequest(action, records = undefined, password = state.password) {
   const response = await fetch(CLOUD_API, { method: 'POST', mode: 'cors', cache: 'no-store', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, password, ...(records ? { records } : {}) }) });
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || 'Cloud unavailable');
@@ -95,49 +108,95 @@ function scheduleSync(delay = 600) {
   cloudStatus(navigator.onLine ? 'Saving to cloud…' : 'Saved on this device. Waiting for internet…');
 }
 async function syncCollection() {
-  if (!state.password || !state.vaultId || state.syncing) return;
-  state.syncing = true;
-  const revision = state.localRevision;
-  try {
-    const data = await cloudRequest('sync', state.records);
-    if (data.id !== state.vaultId) throw new Error('Collection mismatch');
-    useRecords(mergeRecords(data.records, state.records));
-    cloudStatus('Saved on this device and Vercel.');
-    if (state.localRevision !== revision) scheduleSync(0);
-  } catch {
-    cloudStatus('Saved on this device. Cloud sync will retry when you reconnect or return.');
-    if (navigator.onLine && state.password) scheduleSync(15_000);
-  } finally { state.syncing = false; }
-}
-async function loadCollection() {
-  if (!state.password) return;
+  if (!state.password || !state.vaultId) return;
+  if (state.syncPromise) return state.syncPromise;
   const password = state.password;
-  cloudStatus('Loading collection…');
-  try {
-    const data = await cloudRequest('load');
-    if (password !== state.password) return;
-    const previousVault = state.vaultId;
-    let local = readJSON(RECORDS_PREFIX + data.id) || {};
-    if (!previousVault) {
-      const legacy = readJSON(OWNED_KEY);
-      if (Array.isArray(legacy)) {
-        const valid = new Set(state.cards.flatMap((card) => card.variants.map((finish) => variantKey(card, finish))));
-        local = mergeRecords(local, Object.fromEntries(legacy.filter((key) => valid.has(key)).map((key) => [key, { owned: true, at: 0, device: state.deviceId }])));
+  const vaultId = state.vaultId;
+  const revision = state.localRevision;
+  const task = (async () => {
+    try {
+      const data = await cloudRequest('sync', state.records, password);
+      if (state.password !== password || state.vaultId !== vaultId) return;
+      if (data.id !== vaultId) throw new Error('Collection mismatch');
+      const merged = mergeRecords(data.records, state.records);
+      if (!recordsEqual(merged, state.records)) useRecords(merged);
+      cloudStatus(connectedStatus());
+      if (state.localRevision !== revision) scheduleSync(0);
+    } catch {
+      if (state.password !== password || state.vaultId !== vaultId) return;
+      cloudStatus('Saved here · cloud sync will retry');
+      if (navigator.onLine) {
+        clearTimeout(state.syncTimer);
+        state.syncTimer = setTimeout(syncCollection, 15_000);
       }
     }
+  })();
+  state.syncPromise = task;
+  try { await task; } finally { if (state.syncPromise === task) state.syncPromise = null; }
+}
+async function connectCollection(password) {
+  state.connecting = true;
+  clearTimeout(state.syncTimer);
+  try {
+    if (state.loadPromise) await state.loadPromise;
+    if (state.password && state.vaultId) await syncCollection();
+    const data = await cloudRequest('load', undefined, password);
+    const previousVault = state.vaultId;
+    let local = readJSON(RECORDS_PREFIX + data.id) || {};
+    if (!previousVault || (!data.exists && previousVault !== data.id)) {
+      const valid = new Set(state.cards.flatMap((card) => card.variants.map((finish) => variantKey(card, finish))));
+      const copied = Object.fromEntries([...state.owned].filter((key) => valid.has(key)).map((key) => [key, { owned: true, at: Date.now(), device: state.deviceId }]));
+      local = mergeRecords(local, copied);
+    }
+    state.password = password;
     state.vaultId = data.id;
+    state.passwordSaved = saveJSON(PASSWORD_KEY, password);
     saveJSON(ACTIVE_VAULT_KEY, data.id);
     useRecords(mergeRecords(data.records, local));
-    $('#cloud-password').value = '';
-    $('#cloud-password').required = false;
-    $('#cloud-password').placeholder = 'Collection connected';
-    $('#cloud-connect').textContent = 'Refresh collection';
-    $('#cloud-switch').hidden = false;
-    cloudStatus(data.exists ? 'Collection loaded. Changes sync automatically.' : 'Creating your cloud collection…');
-    if (!data.exists || Object.keys(local).length) scheduleSync(0);
+    updateCloudControls();
+    if (!data.exists || !recordsEqual(state.records, data.records)) {
+      cloudStatus('Saving to cloud…');
+      await syncCollection();
+    } else cloudStatus(connectedStatus());
+    return true;
   } catch (error) {
-    cloudStatus(`${error.message}. Your device copy is unchanged.`);
-  }
+    $('#cloud-dialog-status').textContent = `${error.message}. Your current collection is unchanged.`;
+    return false;
+  } finally { state.connecting = false; }
+}
+async function refreshCollection({ showProgress = false } = {}) {
+  if (!state.password || !state.vaultId || state.connecting) return;
+  if (state.loadPromise) return state.loadPromise;
+  const password = state.password;
+  const vaultId = state.vaultId;
+  const task = (async () => {
+    if (showProgress) cloudStatus('Checking Vercel…');
+    try {
+      const data = await cloudRequest('load', undefined, password);
+      if (state.password !== password || state.vaultId !== vaultId) return;
+      if (data.id !== vaultId) throw new Error('Collection mismatch');
+      const local = mergeRecords(readJSON(RECORDS_PREFIX + vaultId) || {}, state.records);
+      const merged = mergeRecords(data.records, local);
+      if (!recordsEqual(merged, state.records)) useRecords(merged);
+      if (!data.exists || !recordsEqual(merged, data.records)) await syncCollection();
+      else cloudStatus(connectedStatus());
+    } catch {
+      if (state.password === password && state.vaultId === vaultId) cloudStatus('Saved here · cloud sync will retry');
+    }
+  })();
+  state.loadPromise = task;
+  try { await task; } finally { if (state.loadPromise === task) state.loadPromise = null; }
+}
+function openCloudDialog() {
+  const switching = Boolean(state.password && state.vaultId);
+  $('#cloud-dialog-title').textContent = switching ? 'Use another collection' : 'Connect your collection';
+  $('#cloud-dialog-description').textContent = switching
+    ? 'Enter another password. An existing collection will load. A new password saves a separate copy of the cards shown here; your old collection stays unchanged.'
+    : 'Enter a password to save the cards marked here to Vercel. Use the same password on another device to load them.';
+  $('#cloud-password').value = '';
+  $('#cloud-dialog-status').textContent = '';
+  $('#cloud-dialog').showModal();
+  $('#cloud-password').focus();
 }
 
 function renderProgress() {
@@ -312,26 +371,31 @@ function bindEvents() {
   $('#sort').addEventListener('change', (event) => { state.sort = event.target.value; renderCards(); });
   $('#currency').addEventListener('change', (event) => { state.currency = event.target.value; saveJSON(CURRENCY_KEY, state.currency); render(); });
   $('#refresh-prices').addEventListener('click', () => refreshPrices(true));
+  $('#cloud-sync').addEventListener('click', async () => {
+    if (!state.password || !state.vaultId) return openCloudDialog();
+    $('#cloud-sync').disabled = true;
+    try { await refreshCollection({ showProgress: true }); } finally { $('#cloud-sync').disabled = false; }
+  });
+  $('#cloud-switch').addEventListener('click', openCloudDialog);
+  $('#cloud-close').addEventListener('click', () => $('#cloud-dialog').close());
+  $('#cloud-dialog').addEventListener('cancel', (event) => { if (state.connecting) event.preventDefault(); });
   $('#cloud-form').addEventListener('submit', async (event) => {
     event.preventDefault();
-    const value = $('#cloud-password').value;
-    if (value) state.password = value;
-    if (!state.password) return;
+    const password = $('#cloud-password').value;
+    if (!password) return;
     $('#cloud-connect').disabled = true;
-    await loadCollection();
-    $('#cloud-connect').disabled = false;
+    $('#cloud-close').disabled = true;
+    $('#cloud-dialog-status').textContent = 'Connecting…';
+    try {
+      if (await connectCollection(password)) $('#cloud-dialog').close();
+    } finally {
+      $('#cloud-connect').disabled = false;
+      $('#cloud-close').disabled = false;
+    }
   });
-  $('#cloud-switch').addEventListener('click', () => {
-    state.password = null;
-    $('#cloud-password').value = '';
-    $('#cloud-password').required = true;
-    $('#cloud-password').placeholder = 'Enter another passphrase';
-    $('#cloud-connect').textContent = 'Load collection';
-    $('#cloud-switch').hidden = true;
-    cloudStatus('Current collection stays saved on this device. Enter another password to switch.');
-  });
-  window.addEventListener('online', () => { if (state.password) loadCollection(); });
-  window.addEventListener('focus', () => { if (state.password) loadCollection(); });
+  window.addEventListener('online', () => { if (state.password) refreshCollection(); });
+  window.addEventListener('focus', () => { if (state.password) refreshCollection(); });
+  setInterval(() => { if (document.visibilityState === 'visible' && state.password) refreshCollection(); }, 15_000);
   $('#clear-filters').addEventListener('click', () => {
     state.filter = 'all'; state.series = 'all'; state.search = ''; state.rarity = 'all';
     $('#search').value = ''; $('#series').value = 'all'; $('#rarity').value = 'all';
@@ -385,11 +449,13 @@ async function start() {
       state.deviceId = localStorage.getItem(DEVICE_KEY) || crypto.randomUUID();
       localStorage.setItem(DEVICE_KEY, state.deviceId);
       state.vaultId = readJSON(ACTIVE_VAULT_KEY);
+      const savedPassword = readJSON(PASSWORD_KEY);
+      if (typeof savedPassword === 'string' && savedPassword.length) { state.password = savedPassword; state.passwordSaved = true; }
     } catch { state.deviceId = crypto.randomUUID(); }
     if (state.vaultId) {
       const records = readJSON(RECORDS_PREFIX + state.vaultId);
       if (records && typeof records === 'object') { state.records = records; state.owned = new Set(Object.entries(records).filter(([, record]) => record?.owned).map(([key]) => key)); }
-      cloudStatus('Saved on this device. Enter your password to resume cloud sync.');
+      if (!state.password) cloudStatus('Saved here · press Sync to reconnect');
     } else {
       const saved = readJSON(OWNED_KEY);
       if (Array.isArray(saved)) state.owned = new Set(saved.filter((key) => typeof key === 'string'));
@@ -400,6 +466,9 @@ async function start() {
     $('#rarity').innerHTML += rarities.map((rarity) => `<option value="${escapeHTML(rarity)}">${escapeHTML(rarity)}</option>`).join('');
     restorePrices();
     render();
+    updateCloudControls();
+    if (state.password && state.vaultId) { cloudStatus('Reconnecting to Vercel…'); refreshCollection(); }
+    else if (state.password) connectCollection(state.password);
     if (Date.now() - new Date(state.fetchedAt).getTime() > 24 * 60 * 60 * 1000) refreshPrices();
   } catch {
     $('#result-count').textContent = 'Card list unavailable';

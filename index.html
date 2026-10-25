@@ -51,9 +51,23 @@
       </section>
 
       <section class="cloud-panel" aria-labelledby="cloud-title">
-        <div><p class="eyebrow">SAVE ACROSS DEVICES</p><h2 id="cloud-title">Your collection, wherever you collect.</h2><p>Enter your collection password to load it on this device. Each password opens a separate collection. Changes save here immediately and sync to Vercel automatically when online.</p><p class="cloud-advice">Use a long, unique passphrase. Keep it safe: there is no password recovery.</p></div>
-        <form id="cloud-form" class="cloud-form"><label for="cloud-password">Collection password</label><div class="cloud-input-row"><input id="cloud-password" type="password" minlength="12" maxlength="128" autocomplete="off" required placeholder="Enter a passphrase (12+ characters)"><button type="submit" id="cloud-connect">Load collection</button></div><p id="cloud-status" role="status" aria-live="polite">Saved on this device. Enter a password to sync.</p><button type="button" id="cloud-switch" class="text-button" hidden>Switch collection</button></form>
+        <div><p class="eyebrow">SAVE ACROSS DEVICES</p><h2 id="cloud-title">Your collection, wherever you collect.</h2><p>Connect once with a password. Your cards save on this device immediately and sync across devices automatically whenever you are online.</p></div>
+        <div class="cloud-actions"><p id="cloud-status" role="status" aria-live="polite">On this device only</p><button type="button" id="cloud-sync" class="cloud-sync-button"><span id="cloud-sync-label">Sync</span><span aria-hidden="true">↗</span></button><button type="button" id="cloud-switch" class="text-button" hidden>Use another password</button></div>
       </section>
+
+      <dialog id="cloud-dialog" class="cloud-dialog" aria-labelledby="cloud-dialog-title">
+        <form id="cloud-form" class="cloud-form">
+          <button type="button" id="cloud-close" class="cloud-close" aria-label="Close">×</button>
+          <p class="eyebrow">YOUR CLOUD COLLECTION</p>
+          <h2 id="cloud-dialog-title">Connect your collection</h2>
+          <p id="cloud-dialog-description">Enter a password to save the cards marked here to Vercel. Use the same password on another device to load them.</p>
+          <label for="cloud-password">Collection password</label>
+          <input id="cloud-password" type="password" autocomplete="off" required placeholder="Enter your password">
+          <p class="cloud-advice">Any nonempty password works. This device remembers it for automatic sync. Anyone who knows it can open this collection; there is no password recovery.</p>
+          <p id="cloud-dialog-status" role="status" aria-live="polite"></p>
+          <button type="submit" id="cloud-connect">Connect &amp; sync</button>
+        </form>
+      </dialog>
 
       <section class="collection-section" id="collection" aria-labelledby="collection-title">
         <div class="section-heading">
@@ -79,7 +93,7 @@
 
     <footer class="site-footer">
       <div><span class="footer-mark">✦</span><strong>POKÉMON CARD COLLECTION</strong><p>A little space for a big collection.</p></div>
-      <div class="footer-fine"><p id="price-status">Loading price information…</p><p>Values are indicative Cardmarket averages in EUR. Some normal, holo and reverse finishes share a product price, so their estimates may match. AUD uses an approximate exchange rate, not an Australian sale price. Prices and availability can change.</p><p>Card data and images: <a href="https://tcgdex.dev/" target="_blank" rel="noopener noreferrer">TCGdex</a>. Exchange rates: <a href="https://frankfurter.dev/" target="_blank" rel="noopener noreferrer">Frankfurter</a>. Your checklist saves on this device and syncs to a private Vercel store after you enter your collection password. Use Export for a backup.</p><p>This is an independent fan checklist and is not affiliated with Pokémon or Cardmarket.</p></div>
+      <div class="footer-fine"><p id="price-status">Loading price information…</p><p>Values are indicative Cardmarket averages in EUR. Some normal, holo and reverse finishes share a product price, so their estimates may match. AUD uses an approximate exchange rate, not an Australian sale price. Prices and availability can change.</p><p>Card data and images: <a href="https://tcgdex.dev/" target="_blank" rel="noopener noreferrer">TCGdex</a>. Exchange rates: <a href="https://frankfurter.dev/" target="_blank" rel="noopener noreferrer">Frankfurter</a>. Your checklist saves on this device. After you connect, the password stays in this browser for automatic sync with a private Vercel store. Use Export for a backup.</p><p>This is an independent fan checklist and is not affiliated with Pokémon or Cardmarket.</p></div>
     </footer>
   </div>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>

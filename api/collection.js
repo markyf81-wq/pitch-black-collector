@@ -53,7 +53,7 @@ export async function POST(request) {
     if (raw.length > 50_000) return reply({ error: 'Request too large' }, 413, origin);
     body = JSON.parse(raw);
   } catch { return reply({ error: 'Invalid request' }, 400, origin); }
-  if (!body || typeof body.password !== 'string' || body.password.length < 12 || body.password.length > 128 || !['load', 'sync'].includes(body.action)) return reply({ error: 'Use a password of 12–128 characters' }, 400, origin);
+  if (!body || typeof body.password !== 'string' || body.password.length === 0 || !['load', 'sync'].includes(body.action)) return reply({ error: 'Enter a password' }, 400, origin);
   let changes = {};
   try { if (body.action === 'sync') changes = cleanRecords(body.records); } catch { return reply({ error: 'Invalid collection' }, 400, origin); }
   const id = createHmac('sha256', process.env.COLLECTION_PEPPER).update(body.password.normalize('NFC')).digest('hex');
