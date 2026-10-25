@@ -108,7 +108,7 @@ function renderCards() {
       return `<button type="button" class="finish-button${owned ? ' owned' : ''}" data-key="${escapeHTML(key)}" aria-pressed="${owned}" aria-label="${owned ? 'Remove' : 'Mark'} ${name} ${escapeHTML(SETS[card.setId])} ${escapeHTML(finishName(finish))} ${owned ? 'from' : 'as owned in'} collection"><span class="finish-check" aria-hidden="true">${owned ? '✓' : ''}</span><span class="finish-name">${escapeHTML(finishName(finish))}</span><span class="finish-price">${money(cardPrice(card, finish))}</span></button>`;
     }).join('');
     const allPrice = card.variants.reduce((total, finish) => total + (cardPrice(card, finish) || 0), 0);
-    return `<article class="card-tile"><div class="card-image-wrap"><span class="number-badge">${escapeHTML(card.setId.toUpperCase())} #${number}</span>${imageMarkup}</div><div class="card-info"><div class="card-set">${escapeHTML(SETS[card.setId])}</div><h3>${name}</h3><div class="rarity">${escapeHTML(card.rarity)}</div><div class="finish-list">${finishMarkup}</div><div class="card-total"><span>All finishes est.</span><strong>${money(allPrice)}</strong></div></div></article>`;
+    return `<article class="card-tile"><div class="card-image-wrap">${imageMarkup}</div><div class="card-info"><div class="card-meta"><div class="card-set">${escapeHTML(SETS[card.setId])}</div><span class="card-number">${escapeHTML(card.setId.toUpperCase())} #${number}</span></div><h3>${name}</h3><div class="rarity">${escapeHTML(card.rarity)}</div><div class="finish-list">${finishMarkup}</div><div class="card-total"><span>All finishes est.</span><strong>${money(allPrice)}</strong></div></div></article>`;
   }).join('');
 }
 
