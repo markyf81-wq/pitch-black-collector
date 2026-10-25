@@ -57,7 +57,8 @@ function renderProgress() {
   const valid = new Set(cards.flatMap((card) => card.variants.map((finish) => variantKey(card, finish))));
   const ownedCount = [...state.owned].filter((key) => valid.has(key)).length;
   const percentage = total ? Math.round(ownedCount / total * 100) : 0;
-  const value = cards.reduce((sum, card) => sum + card.variants.reduce((subtotal, finish) => subtotal + (state.owned.has(variantKey(card, finish)) ? (cardPrice(card, finish) || 0) : 0), 0), 0);
+  const ownedValue = (collection) => collection.reduce((sum, card) => sum + card.variants.reduce((subtotal, finish) => subtotal + (state.owned.has(variantKey(card, finish)) ? (cardPrice(card, finish) || 0) : 0), 0), 0);
+  const totalValue = ownedValue(state.cards);
   $('#progress-scope').textContent = state.series === 'all' ? 'ALL SETS' : SETS[state.series].toUpperCase();
   $('#owned-count').textContent = ownedCount;
   $('#progress-total').textContent = `/ ${total} finishes collected`;
@@ -66,7 +67,8 @@ function renderProgress() {
   $('.progress-track').setAttribute('aria-valuemax', String(total));
   $('.progress-track').setAttribute('aria-valuenow', String(ownedCount));
   $('#remaining-count').textContent = total - ownedCount;
-  $('#collection-value').textContent = money(value);
+  $('#collection-value').textContent = money(totalValue);
+  $('#value-description').textContent = state.series === 'all' ? 'Across all series · finishes you own' : `${SETS[state.series]}: ${money(ownedValue(cards))} of the total`;
   $('#hero-card-count').textContent = `${state.cards.length} cards`;
   $('#hero-variant-count').textContent = `${state.cards.reduce((sum, card) => sum + card.variants.length, 0)} finishes`;
   $('#progress-message').textContent = ownedCount === total ? 'Collection complete.' : ownedCount ? `${total - ownedCount} finishes to go. Keep hunting.` : 'Your journey starts here.';

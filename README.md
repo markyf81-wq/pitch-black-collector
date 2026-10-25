@@ -1,6 +1,6 @@
 # Pokémon Card Collection
 
-A standalone static checklist for the 122 numbered English Pokémon TCG Mega Evolution—Chaos Rising cards and 120 Mega Evolution—Pitch Black cards. It tracks 406 finishes, including the four stamped Chaos Rising variants currently listed by TCGdex. Filter by series, rarity, name, and collection status.
+A standalone static checklist for the 122 numbered English Pokémon TCG Mega Evolution—Chaos Rising cards and 120 Mega Evolution—Pitch Black cards. It tracks 406 finishes, including the four stamped Chaos Rising variants currently listed by TCGdex. Filter by series, rarity, name, and collection status. The dashboard always shows the estimated value of owned finishes across all series; when filtered, it also shows the selected series' value.
 
 The collected state lives only in this browser's local storage. The existing Pitch Black storage key is retained so previously marked cards stay collected. **Export checklist** creates a backup covering both series; **Import checklist** accepts both the new format and old Pitch Black exports. Importing an old Pitch Black export replaces only the Pitch Black checkmarks. There is no account or cloud sync.
 
