@@ -1,5 +1,7 @@
 # Pokémon Card Collection
 
+Live site: [GitHub Pages](https://markyf81-wq.github.io/pitch-black-collector/) or [Vercel](https://pokemon-card-collection-eight.vercel.app/). Both use the same password-scoped cloud collections, while each browser keeps its own offline copy.
+
 A standalone static checklist for the 122 numbered English Pokémon TCG Mega Evolution—Chaos Rising cards and 120 Mega Evolution—Pitch Black cards. It tracks 406 finishes, including the four stamped Chaos Rising variants currently listed by TCGdex. Filter by series, rarity, name, and collection status. The dashboard estimates the value of owned finishes in the selected series, or across both series when **All series** is selected.
 
 Each collection password opens a separate private collection in Vercel Blob. Checkmarks save to this device immediately and autosync after a password is entered. A device keeps its most recently opened collection locally, including edits made while offline; re-enter the password after a page reload to resume cloud sync. The password stays in memory for the current page and is never stored in browser storage or in Blob. The server uses a secret keyed hash of it to locate the collection. Choose a long, unique passphrase; there is no password recovery. A mistyped password opens a different, initially empty collection.
